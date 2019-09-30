@@ -6,7 +6,7 @@
 /* class Queue */
 typedef struct Queue Queue;
 struct Queue {
-    int buffer[QUEUE_SIZE];
+    int buffer[QUEUE_SIZE_REAL];
     int size;
     int head;
     int tail;

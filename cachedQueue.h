@@ -1,14 +1,12 @@
 #ifndef _CACHEDQUEUE_H_
 #define _CACHEDQUEUE_H_
 #include "queue.h"
-#include "stdio.h"
 
 typedef struct CachedQueue CachedQueue;
 struct CachedQueue {
     Queue *queue; /* base class */
     /* new attributes */
     char filename[80];
-    FILE *fp;
     int numberElementsOnDisk;
     /* aggregation in subclass */
     Queue *outputQueue;
@@ -28,7 +26,7 @@ struct CachedQueue {
 void CachedQueue_Init(CachedQueue *const me, char *fName,
             int (*isFullfunc) (const CachedQueue *const me),
             int (*isEmptyfunc) (const CachedQueue *const me),
-            int (*getSiezfunc) (const CachedQueue *const me),
+            int (*getSizefunc) (const CachedQueue *const me),
             void (*insertfunc) (CachedQueue *const me, int k),
             int (*removefunc) (CachedQueue *const me),
             void (*flushfunc) (CachedQueue *const me),

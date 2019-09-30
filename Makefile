@@ -1,9 +1,9 @@
 # macro
-
+LIBDIR = /usr/local/lib/
 # build tools
 CC := gcc
 CFLAGS := -g
-LDFLAGS :=
+LDFLAGS := -L$(LIBDIR) -lcheck
 
 # source file
 srcFiles = $(wildcard *.c)
@@ -19,14 +19,14 @@ all:$(TARGET)
 
 # 可执行文件的生成依赖于.o文件
 $(TARGET):$(objFiles)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 # .o文件依赖于.c文件
 %.o:%.c
-	$(CC) -c $(CFLAGS) $(LDFLAGS) $<
+	$(CC) -c $< $(CFLAGS) $(LDFLAGS)
 
 .PHONY:clean all
 
 clean:
-	rm -f *.o
+	rm -f *.o *.dat
 	rm -f $(TARGET)

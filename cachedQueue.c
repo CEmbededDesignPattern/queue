@@ -1,12 +1,16 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 #include "cachedQueue.h"
 
 /* Constructors and Destructors */
 void CachedQueue_Init(CachedQueue *const me, char *fName,
             int (*isFullfunc) (const CachedQueue *const me),
             int (*isEmptyfunc) (const CachedQueue *const me),
-            int (*getSiezfunc) (const CachedQueue *const me),
+            int (*getSizefunc) (const CachedQueue *const me),
             void (*insertfunc) (CachedQueue *const me, int k),
             int (*removefunc) (CachedQueue *const me),
             void (*flushfunc) (CachedQueue *const me),
@@ -18,25 +22,21 @@ void CachedQueue_Init(CachedQueue *const me, char *fName,
     /* initalize subclass attributes */
     me->numberElementsOnDisk = 0;
     strcpy(me->filename, fName);
-    me->fp = fopen(me->filename, "w+");
-    if (me->fp != NULL)
+    if (access(me->filename, F_OK) == 0) //file exist
     {
-        goto err;
+        remove(me->filename);
     }
     /* initalize aggregates */
     me->outputQueue = Queue_Create();
-
     /* initalize subclass virtual operatios */
     me->isFull = isFullfunc;
     me->isEmpty = isEmptyfunc;
-    me->getSize = getSiezfunc;
+    me->getSize = getSizefunc;
     me->insert = insertfunc;
     me->remove = removefunc;
     me->flush = flushfunc;
     me->load = loadfunc;
     return;
-err:
-    Queue_Destroy(me->queue);
 }
 
 void CachedQueue_Cleanup(CachedQueue *const me)
@@ -90,7 +90,7 @@ void CachedQueue_insert(CachedQueue *const me, int k)
  */
 int CachedQueue_remove(CachedQueue *const me)
 {
-    if (!me->outputQueue->isEmpty(me->outputQueue))
+    if (!(me->outputQueue->isEmpty(me->outputQueue)))
     {
         return me->outputQueue->remove(me->outputQueue);
     }
@@ -120,18 +120,23 @@ int CachedQueue_remove(CachedQueue *const me)
 */
 void CachedQueue_flush(CachedQueue *const me)
 {
+    FILE *fp = NULL;
     int val;
     char buf[8];
-    if (me->fp != NULL)
+    fp = fopen(me->filename, "a"); //O_WRONLY | O_CREAT | O_APPEND
+
+    if (fp != NULL)
     {
         while (!(me->queue->isEmpty(me->queue)))
         {
             val = me->queue->remove(me->queue);
             memset(buf, 0, sizeof(buf));
-            sprintf(buf, "%d", val);
-            fputs(buf, me->fp);
+            sprintf(buf, "%d\n", val);
+            fputs(buf, fp);
             ++me->numberElementsOnDisk;
         }
+
+        fclose(fp);
     }
 }
 /**
@@ -147,26 +152,40 @@ void CachedQueue_flush(CachedQueue *const me)
 */
 void CachedQueue_load(CachedQueue *const me)
 {
+    FILE *fp = NULL, *fp_tmp = NULL;
     int val;
-    int i;
     char buf[8];
-    if (me->fp != NULL)
+    fp = fopen(me->filename, "r+"); //O_RDWR
+    fp_tmp = fopen("./tmp.dat", "a+");
+
+    if (fp != NULL && fp_tmp != NULL)
     {
         // load data from disk to outputQueue
         while (!(me->outputQueue->isFull(me->outputQueue)) && (me->numberElementsOnDisk > 0))
         {
             memset(buf, 0, sizeof(buf));
-            fgets(buf, sizeof(buf), me->fp);
+            fgets(buf, sizeof(buf), fp);
             --me->numberElementsOnDisk;
             val = atoi(buf);
             me->outputQueue->insert(me->outputQueue, val);
         }
 
-        // invert outputQueue data
-        for (i = 0; i < me->outputQueue->getSize(me->outputQueue); i++)
+        while (1)
         {
-            me->outputQueue->insert(me->outputQueue, me->outputQueue->remove(me->outputQueue));
+            memset(buf, 0, sizeof(buf));
+            if (fgets(buf, sizeof(buf), fp) == NULL)
+                break;
+
+            fputs(buf, fp_tmp);
         }
+
+        fclose(fp);
+        fclose(fp_tmp);
+
+        //remove file
+        remove(me->filename);
+        //rename file
+        rename("./tmp.dat", me->filename);
     }
 }
 
