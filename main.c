@@ -40,10 +40,9 @@ START_TEST(test_cachedQueue_push_and_pop)
     printf("=========================start test cachedQueue_push_and_pop.....\n");
     CachedQueue *myCachedQ;
     myCachedQ = CachedQueue_Create();
-    ck_assert_msg(myCachedQ != NULL, "error, myCachedQ is NULL");
     k = 10000;
 
-    for (j = 0; j < QUEUE_SIZE + 1; j++)
+    for (j = 0; j < QUEUE_SIZE * 2 + 1; j++)
     {
         h = myCachedQ->queue->head;
         d = myCachedQ->numberElementsOnDisk;
@@ -53,7 +52,7 @@ START_TEST(test_cachedQueue_push_and_pop)
 
     printf("Inserted %d elements, OnDisk %d\n", myCachedQ->getSize(myCachedQ), myCachedQ->numberElementsOnDisk);
 
-    for (j = 0; j < QUEUE_SIZE + 1; j++)
+    for (t = 0; t < QUEUE_SIZE * 2 + 1; t++)
     {
         k = myCachedQ->remove(myCachedQ);
         printf("REMOVING %d, size = %d\n", k, myCachedQ->getSize(myCachedQ));
@@ -83,47 +82,17 @@ static Suite *queue_suite(void)
     return s;
 }
 
-// int main(int argc, char const *argv[])
-// {
-//     SRunner *sr;
-//     Suite *s;
-
-//     s = queue_suite();
-//     sr = srunner_create(s);
-
-//     srunner_run_all(sr, CK_NORMAL);
-//     srunner_ntests_failed(sr);
-//     srunner_free(sr);
-
-//     return 0;
-// }
-
-
 int main(int argc, char const *argv[])
 {
-    int j, k, h, d, t;
-    printf("=========================start test cachedQueue_push_and_pop.....\n");
-    CachedQueue *myCachedQ;
-    myCachedQ = CachedQueue_Create();
-    k = 10000;
+    SRunner *sr;
+    Suite *s;
 
-    for (j = 0; j < QUEUE_SIZE * 2 + 1; j++)
-    {
-        h = myCachedQ->queue->head;
-        d = myCachedQ->numberElementsOnDisk;
-        myCachedQ->insert(myCachedQ, k);//9990
-        printf("inserting %d at position %d - %d, size %d\n", k--, d, h, myCachedQ->getSize(myCachedQ));
-    }
+    s = queue_suite();
+    sr = srunner_create(s);
 
-    printf("Inserted %d elements, OnDisk %d\n", myCachedQ->getSize(myCachedQ), myCachedQ->numberElementsOnDisk);
+    srunner_run_all(sr, CK_NORMAL);
+    srunner_ntests_failed(sr);
+    srunner_free(sr);
 
-    for (t = 0; t < QUEUE_SIZE * 2 + 1; t++)
-    {
-        k = myCachedQ->remove(myCachedQ);
-        printf("REMOVING %d, size = %d\n", k, myCachedQ->getSize(myCachedQ));
-    }
-    printf("Last item removed = %d\n", k);
-    printf("Current cachedQueue size %d\n", myCachedQ->getSize(myCachedQ));
-    printf("=========================end test cachedQueue_push_and_pop\n");
     return 0;
 }
