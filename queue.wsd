@@ -1,0 +1,33 @@
+@startuml
+class Queue {
+    int buffer[QUEUE_SIZE_REAL]
+    int size
+    int head
+    int tail
+
+    int isFull()
+    int isEmpty()
+    int getSize()
+    void insert()
+    int remove()
+}
+
+class CachedQueue {
+    Queue *queue
+    char filename[80]
+    int numberElementsOnDisk
+    Queue *outputQueue
+
+    int isFull()
+    int isEmpty()
+    int getSize()
+    void insert()
+    int remove()
+    void flush()
+    void load()
+}
+
+Queue <|-- CachedQueue
+CachedQueue "1" *--> "1" Queue : outputQueue
+
+@enduml
